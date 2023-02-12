@@ -1,21 +1,3 @@
-"""Assignment 9
-Part 1: Variational Autoencoder + Conditional Variational Autoencoder
-
-NOTE: Feel free to check: https://arxiv.org/pdf/1512.09300.pdf
-
-NOTE: Write Down Your Info below:
-
-    Name: Sidharth Srinivasan
-
-    CCID: sr11
-
-    Average Reconstruction Loss per Sample over Cifar10 Test Set:
-
-    The architecture used for the model is inspired from the Week 8 implementations of Variational AEs.
-
-
-"""
-
 import os
 
 import numpy
@@ -38,7 +20,7 @@ from ssim import SSIM
 # VAE Build Blocks
 
 # #####
-# TODO: Complete the encoder architecture
+# encoder architecture
 # #####
 
 class Encoder(nn.Module):
@@ -78,9 +60,6 @@ class Encoder(nn.Module):
 
 
     def forward(self, x):
-        # #####
-        # TODO: Complete the encoder architecture to calculate mu and log_var
-        # #####
         x1 = F.relu(self.CNN_1(x))
         x2 = F.relu(self.CNN_2(x1))
         x3 = F.relu(self.CNN_3(x2))
@@ -91,9 +70,6 @@ class Encoder(nn.Module):
         return mu, log_var
 
 
-# #####
-# TODO: Complete the decoder architecture
-# #####
 
 class Decoder(nn.Module):
     def __init__(
@@ -106,7 +82,6 @@ class Decoder(nn.Module):
         self.out_channels = out_channels
 
         # #####
-        # TODO: Complete the decoder architecture to reconstruct image from latent vector z
         # I found that using transpose CNN without using output padding halves the size of the input I started with
         # #####
         self.decoder_input = nn.Linear(latent_dim, 256 * 4)
@@ -130,9 +105,6 @@ class Decoder(nn.Module):
             nn.Conv2d(32, out_channels, kernel_size=3, padding = 1),
         )
     def forward(self, z):
-        # #####
-        # TODO: Complete the decoder architecture to reconstruct image xg from latent vector z
-        # #####
         z1 = self.decoder_input(z)
         z2 = z1.view(-1, 256, 2, 2)
         z3 = self.Transpose_CNN1(z2)
@@ -169,9 +141,6 @@ class VAE(nn.Module):
         return z
 
     def forward(self, x, y):
-        # #####
-        # TODO: Complete forward for VAE
-        # #####
         """Forward for CVAE.
         Returns:
             xg: reconstructed image from decoder.
@@ -188,10 +157,6 @@ class VAE(nn.Module):
             self,
             n_samples: int,
     ):
-        # #####
-        # TODO: Complete generate method for VAE
-        # #####
-
         """Randomly sample from the latent space and return
         the reconstructed samples.
         Returns:
@@ -223,7 +188,6 @@ class CVAE(nn.Module):
         self.img_size = img_size
 
         # #####
-        # TODO: Insert additional layers here to encode class information
         # Feel free to change parameters for encoder and decoder to suit your strategy
         # #####
 
@@ -244,7 +208,6 @@ class CVAE(nn.Module):
 
     def forward(self, x, y):
         # #####
-        # TODO: Complete forward for CVAE
         # Note that you need to process label information HERE.
         # #####
         """Forward for CVAE.
@@ -271,9 +234,6 @@ class CVAE(nn.Module):
             n_samples: int,
             y: torch.Tensor = None,
     ):
-        # #####
-        # TODO: Complete generate for CVAE
-        # #####
         """Randomly sample from the latent space and return
         the reconstructed samples.
         NOTE: Randomly generate some classes here, if not y is provided.
@@ -343,7 +303,6 @@ if not os.path.exists(os.path.join(os.path.curdir, "visualize", name)):
 save_path = os.path.join(os.path.curdir, "visualize", name)
 ckpt_path = name + '.pt'
 
-# TODO: Set up KL Annealing
 kl_annealing = [0.0, 0.000001, 0.00001, 0.0001, 0.001]  # KL Annealing
 
 # -----
@@ -395,8 +354,6 @@ else:
 
 # -----
 # Losses
-# #####
-# TODO: Initialize your loss criterions HERE.
 l2_loss_criterion = nn.MSELoss()
 bce_loss_criterion = nn.BCELoss()
 ssim_loss_criterion = SSIM()
@@ -421,10 +378,6 @@ scheduler = optim.lr_scheduler.MultiStepLR(
 
 # -----
 # Train loop
-
-# #####
-# TODO: Complete train_step for VAE/CVAE
-# #####
 
 def train_step(x, y):
     """One train step for VAE/CVAE.
@@ -465,9 +418,7 @@ def denormalize(x):
     Return:
         x_denormalized: denormalized image as numpy.uint8, in [0, 255].
     """
-    # #####
-    # TODO: Complete denormalization.
-    # #####
+
     x = x.permute(0, 2, 3, 1)
     x_denormalized = x.cpu().numpy() * 255
     x_denormalized = x_denormalized.astype(np.uint8)
@@ -507,8 +458,6 @@ for epoch in range(1, num_epochs + 1):
         # Loop through test set
         model.eval()
 
-        # TODO: Accumulate average reconstruction losses per sample individually for plotting
-        # Feel free to add code wherever you want to accumulate the loss
         l2_loss_per_epoch = 0
         bce_loss_per_epoch = 0
         ssim_loss_per_epoch = 0
@@ -526,7 +475,7 @@ for epoch in range(1, num_epochs + 1):
                 mu = results[1]
                 log_var = results[2]
 
-                # TODO: Accumulate average reconstruction losses per batch individually for plotting
+                # Accumulate average reconstruction losses per batch individually for plotting
 
                 l2_loss = l2_loss_criterion(results[0], x)
                 bce_loss = bce_loss_criterion(results[0], x)
@@ -605,9 +554,7 @@ for epoch in range(1, num_epochs + 1):
             plt.close('all')
             print("Figure saved at epoch {}.".format(epoch))
 
-    # #####
-    # TODO: Complete KL-Annealing.
-    # #####
+   
     # KL Annealing
     # Adjust scalar for KL Divergence loss
     if epoch == 1:
